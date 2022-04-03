@@ -1,13 +1,12 @@
 
-import Scoreboard from './Scoreboard';
-import MelodyAuto from './MelodyAuto';
-import MelodyManual from './MelodyManual';
+import Timeboard from './Timeboard';
 
 import fs from 'flatstore';
 import { useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
+import GlassBridge from './GlassBridge';
 
-function Gamescreen(props) {
+function GameScreen(props) {
 
     const [isReady, setIsReady] = useState(false);
 
@@ -19,24 +18,15 @@ function Gamescreen(props) {
     return (
         <>
             <div className="gamescreen">
-                <Scoreboard />
+                {/* <Scoreboard /> */}
                 <div className="gamearea-wrapper">
-                    <Melody />
+                    <GlassBridge />
                 </div>
+                <Timeboard />
             </div>
         </>
     )
 }
 
 
-function Melody(props) {
-    if (props.playAuto)
-        return (<MelodyAuto />);
-
-    return (<MelodyManual />)
-}
-
-Melody = fs.connect(['playAuto'])(Melody);
-
-
-export default Gamescreen;
+export default GameScreen;

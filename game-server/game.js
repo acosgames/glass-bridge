@@ -2,20 +2,27 @@ import cup from './acosg';
 
 let defaultGame = {
     state: {
-        _history: [],
-        round: 3,
-        pattern: [],
+        history: [-1],
+        round: 0,
+        lives: 5
     },
     players: {},
     next: {},
     events: {}
 }
 
-class MemorizeUp {
+class GlassBridge {
 
     onNewGame(action) {
         cup.setGame(defaultGame);
-        this.checkNewRound();
+
+        let state = cup.state();
+        state.lives = 6;
+        state.round = 0;
+
+        let minTime = 30000;
+        cup.setTimelimit(minTime);
+        cup.next({ 'id': '*' });
     }
 
     onSkip(action) {
@@ -37,11 +44,13 @@ class MemorizeUp {
         player.score = 0;
     }
 
-    checkNewRound() {
-        //if player count reached required limit, start the game
-        //let maxPlayers = cup.rules('maxPlayers') || 2;
-        this.newRound();
+
+    getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
     }
+
 
     onLeave(action) {
         this.playerLeave(action.user.id);
@@ -52,83 +61,24 @@ class MemorizeUp {
     }
 
     onPick(action) {
+        let state = cup.state();
+        let correct = this.getRandomInt(0, 2);
+        if (action.payload != correct) {
+            state.lives--;
+        }
 
-        let maxCorrect = this.checkGameover(action)
+        state.history.push(correct);
 
-        if (maxCorrect > -1) {
-            this.setWinner(action.user.id, maxCorrect);
+        if (state.lives <= 0) {
+            this.setWinner(action.user.id);
             return;
         }
 
-        // let player = cup.players(action.user.id);
-
-        // let input = action?.payload;
-        // if (!input || !Array.isArray(input) || input.length == 0)
-        //     player.score = 0;
-        // else
-        //     player.score = input.length;
-
-        let state = cup.state();
         state.round = state.round + 1;
-        this.newRound();
-    }
-
-
-    checkGameover(action) {
-        let input = action?.payload;
-        if (!input || !Array.isArray(input) || input.length == 0)
-            return 0;
-
-        let state = cup.state();
-
-        if (input.length < state._history.length)
-            return input.length;
-        // let inputPattern = this.decodePattern(input);
-        for (var i = 0; i < input.length; i++) {
-            if (input[i] != state._history[i])
-                return i + 1;
-        }
-
-
-        return -1;
-    }
-
-    getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-    }
-
-    addPatterns() {
-        let state = cup.state();
-        state.pattern = [];
-
-        let count = state.round == 3 ? 3 : 1;
-
-        for (let i = 0; i < count; i++) {
-            let nextPattern = this.getRandomInt(1, 5);
-            state._history.push(nextPattern);
-            state.pattern.push(nextPattern);
-        }
-    }
-
-    newRound() {
-        let state = cup.state();
-
-
-        this.addPatterns();
-
-        cup.next({ 'id': '*' });
-
-        // state.pattern = this.encodePattern();
-        // cup.event('pattern', this.encodePattern());
-
-        let minTime = Math.max(state._history.length, 5) + Math.round(state._history.length * 0.8) * 100;
-        cup.setTimelimit(minTime);
     }
 
     // set the winner event and data
-    setWinner(userid, maxCorrect) {
+    setWinner(userid) {
         let state = cup.state();
         let player = cup.players(userid);
         player.rank = 1;
@@ -138,11 +88,10 @@ class MemorizeUp {
         }
 
         cup.gameover({
-            type: 'winner',
-            correct: maxCorrect
+            type: 'winner'
         });
-        cup.next({});
+        // cup.next({});
     }
 }
 
-export default new MemorizeUp();
+export default new GlassBridge();

@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom';
 import { GameLoader } from './acosg';
 import './index.css';
 
-import Gamescreen from './components/gamescreen';
+import GameScreen from './components/GameScreen';
 
 ReactDOM.render(
-  <GameLoader component={Gamescreen} />,
+  <GameLoader component={GameScreen} />,
   document.getElementById('root')
 );
